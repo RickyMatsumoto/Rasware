@@ -9,6 +9,7 @@
 tBoolean blink_on = true;
 static tMotor *left;
 static tMotor *right;
+static tMotor *mid;
 static tADC *adc[4];
 static tBoolean initializedLine = false;
 
@@ -74,19 +75,24 @@ void initSensor(void) {
 }
 
 void findRobot(void){
-    int state = 0;
+    int state = 7;
     int input = 0x00;
     int pin1;
     int pin2;
     int pin3;
     int pin4;
 
-    SetMotor(left, -0.5);
-    SetMotor(right, 0.5);
-    Wait(2);
+    //SetMotor(left,-1.0);
+    //SetMotor(right, 1.0);
+    //Wait(1);
+
+    SetMotor(mid, 1.0);
+    Wait(1.5);
 
 
     while(1){
+        SetMotor(mid, 0);
+        /*
         Printf(
             "IR values: %1.3f %1.3f %1.3f %1.3f\r",
             ADCRead(adc[0]),
@@ -94,21 +100,34 @@ void findRobot(void){
             ADCRead(adc[2]),
             ADCRead(adc[3])
         );
+        */
         
         //out
         if(FSM[state].out == SPIN){
-            SetMotor(left, -0.2);
-            SetMotor(right, 0.2);
+            SetMotor(left, -0.1);
+            SetMotor(right, 0.1);
         }else if(FSM[state].out == MOVE){
+            if(ADCRead(adc[3]) < .5){
+                SetMotor(left, .7);
+                SetMotor(right, .7);
+            }else if(ADCRead(adc[3]) < .7){
+                SetMotor(left, .8);
+                SetMotor(right, .8);
+            }else if(ADCRead(adc[3]) < .9){
+                SetMotor(left, .9);
+                SetMotor(right, .9);
+            }else{
+                SetMotor(left, 1.0);
+                SetMotor(right, 1.0);
+            }
+        }else {
             SetMotor(left, -0.3);
             SetMotor(right, -0.3);
-        }else {
-            SetMotor(left, 0.1);
-            SetMotor(right, 0.1);
-            Wait(1);
-            SetMotor(left, -0.2);
-            SetMotor(right, 0.2);
-            Wait(2);
+            Wait(.5);
+
+            SetMotor(left, -0.175);
+            SetMotor(right, 0.175);
+            Wait(.75);
         }
 
 
@@ -158,6 +177,7 @@ int main(void) {
     CallEvery(blink, 0, 0.5);
     right = InitializeServoMotor(PIN_B6, false);
     left = InitializeServoMotor(PIN_B7, true);
+    mid = InitializeServoMotor(PIN_C7, true);
 
     initSensor();
     findRobot();
